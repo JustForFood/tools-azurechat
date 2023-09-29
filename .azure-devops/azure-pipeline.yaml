@@ -69,10 +69,15 @@ stages:
               versionSpec: '3.x'
               addToPath: true
 
-          - script: |
-              az webapp config appsettings set --name $(AZURE_APP_SERVICE_NAME) --resource-group $(AZURE_RESOURCE_GROUP) --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
-              az webapp config set --name $(AZURE_APP_SERVICE_NAME) --resource-group $(AZURE_RESOURCE_GROUP) --startup-file="node server.js"
+          - task: AzureCLI@2
             displayName: 'Configure Azure Web App'
+            inputs:
+              azureSubscription: $(AZURE_SERVICE_CONNECTION_NAME)
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az webapp config appsettings set --name $(AZURE_APP_SERVICE_NAME) --resource-group $(AZURE_RESOURCE_GROUP) --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
+                az webapp config set --name $(AZURE_APP_SERVICE_NAME) --resource-group $(AZURE_RESOURCE_GROUP) --startup-file="node server.js"
 
           - task: AzureWebApp@1
             inputs:
