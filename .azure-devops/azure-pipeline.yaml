@@ -1,0 +1,83 @@
+trigger:
+  - main  # Trigger the pipeline when changes are pushed to the 'main' branch
+  - feature/azure-devops-ci # todo remove
+
+pr: none
+
+pool:
+  vmImage: 'ubuntu-latest'  # Use the latest Ubuntu image
+
+stages:
+  - stage: Build
+    jobs:
+      - job: Build
+        steps:
+          - checkout: self
+
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '18.x'  # Set up Node.js version 18.x
+
+          - script: |
+              cd ./src
+              npm install
+              npm run build --if-present
+              cd ..
+            displayName: 'npm install and build'
+
+          - script: |
+              cp -R ./src/.next/standalone ./site-deploy
+            displayName: 'Copy standalone into the root'
+
+          - script: |
+              cp -R ./src/.next/static ./site-deploy/.next/static
+            displayName: 'Copy static into the .next folder'
+
+          - script: |
+              cp -R ./src/public ./site-deploy/public
+            displayName: 'Copy Public folder'
+
+          - script: |
+              cd ./site-deploy
+              zip Nextjs-site.zip ./* .next -qr
+            displayName: 'Package Next application'
+
+          - script: |
+              ls ./src
+              ls ./src/.next
+              ls ./site-deploy
+            displayName: 'Diagnostics'
+
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: './site-deploy/Nextjs-site.zip'
+              artifactName: 'Nextjs-site'
+
+#- stage: Deploy
+#  dependsOn: Build
+#  jobs:
+#  - job: Deploy
+#    environment: 'Production'  # Set the environment to Production
+#
+#    steps:
+#    - task: DownloadPipelineArtifact@2
+#      inputs:
+#        artifactName: 'Nextjs-site'
+#        downloadPath: $(System.ArtifactsDirectory)
+#
+#    - script: |
+#        az login --service-principal -u ${{ secrets.AZURE_SERVICE_PRINCIPAL_ID }} -p ${{ secrets.AZURE_SERVICE_PRINCIPAL_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+#        rg=$(az webapp list --query "[?name=='${{ secrets.AZURE_APP_SERVICE_NAME }}'].resourceGroup" --output tsv)
+#        echo Setting SCM_DO_BUILD_DURING_DEPLOYMENT=false on app service ${{ secrets.AZURE_APP_SERVICE_NAME }}
+#        az webapp config appsettings set -n ${{ secrets.AZURE_APP_SERVICE_NAME }} -g $rg --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false -o none
+#        echo Setting --startup-file="node server.js" on app service ${{ secrets.AZURE_APP_SERVICE_NAME }}
+#        az webapp config set --startup-file="node server.js" -n ${{ secrets.AZURE_APP_SERVICE_NAME }} -g $rg -o none
+#        sleep 10
+#      displayName: 'Azure Login and Configuration'
+#
+#    - task: AzureWebApp@1
+#      inputs:
+#        azureSubscription: ${{ secrets.AZURE_SERVICE_CONNECTION_NAME }}
+#        appName: ${{ secrets.AZURE_APP_SERVICE_NAME }}
+#        package: $(System.ArtifactsDirectory)/Nextjs-site.zip
+#        enableCustomDeployment: true
