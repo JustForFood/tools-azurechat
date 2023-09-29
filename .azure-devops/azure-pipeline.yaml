@@ -70,13 +70,13 @@ stages:
               addToPath: true
 
           - script: |
-              az webapp config appsettings set --name ${{ secrets.AZURE_APP_SERVICE_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
-              az webapp config set --name ${{ secrets.AZURE_APP_SERVICE_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --startup-file="node server.js"
+              az webapp config appsettings set --name $(AZURE_APP_SERVICE_NAME) --resource-group $(AZURE_RESOURCE_GROUP) --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
+              az webapp config set --name $(AZURE_APP_SERVICE_NAME) --resource-group $(AZURE_RESOURCE_GROUP) --startup-file="node server.js"
             displayName: 'Configure Azure Web App'
 
           - task: AzureWebApp@1
             inputs:
-              azureSubscription: ${{ secrets.AZURE_SERVICE_CONNECTION_NAME }}
-              appName: ${{ secrets.AZURE_APP_SERVICE_NAME }}
+              azureSubscription: $(AZURE_SERVICE_CONNECTION_NAME)
+              appName: $(AZURE_APP_SERVICE_NAME)
               package: $(System.ArtifactsDirectory)/Nextjs-site.zip
               enableCustomDeployment: true
