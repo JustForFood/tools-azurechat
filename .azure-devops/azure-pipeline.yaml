@@ -57,7 +57,6 @@ stages:
     dependsOn: Build
     jobs:
       - job: Deploy
-        environment: 'utils-prod'  # Set the environment to Production
 
         steps:
           - task: DownloadPipelineArtifact@2
