@@ -14,7 +14,7 @@ steps:
       containerRegistry: $(ACR_CONNECTION_NAME)
       repository: 'tools-azurechat'
       command: 'buildAndPush'
-      Dockerfile: 'src/Dockerfile'
+      Dockerfile: 'src/dockerfile'
       buildContext: '$(Build.SourcesDirectory)/src'
       tags: |
         $(Build.BuildNumber)
